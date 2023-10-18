@@ -21,9 +21,10 @@ limit 5;
 
 --What is the total number percentage of kittens, adults, and seniors, whose outcome is "Adopted"?
 
-select
+select sum(counter) as TotalAdoptedCats from
+(select
 	cat_age_grp,
-	COUNT(*) as count
+	COUNT(*) as counter
 from
 	(
 	select
@@ -36,7 +37,7 @@ from
 			else 'Unknown'
 		end as cat_age_grp
 	from
-		animaldimension ad
+		animaldimension ad where ad.animal_type = 'Cat'
 ) as cat_agegroup
 join outcomesfact of2 on
 	cat_agegroup.animal_dim_key = of2.animal_dim_key 
@@ -45,7 +46,7 @@ join outcomedimension otd on
 where
 	otd.outcome_type  = 'Adoption'
 group by
-	cat_age_grp;
+	cat_age_grp) as query;
 
 --Conversely, among all the cats who were "Adopted", what is the total number percentage of kittens, adults, and seniors?
 
