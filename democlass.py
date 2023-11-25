@@ -11,10 +11,11 @@ Original file is located at
 import pandas as pd
 import sys
 import argparse
+from sqlalchemy import create_engine,text
 
-
-def read_data(source):
-    df = pd.read_csv(source)
+def extract_data():
+    source_url = "https://raw.githubusercontent.com/manasakolavennu/DataCenterScaleComputing/HW2/Austin_Animal_Center_Outcomes_20231017.csv"
+    df = pd.read_csv(source_url)
     return df
 
 
@@ -23,22 +24,58 @@ def transform_data(data):
     transformed_data[['Month', 'Year']] = transformed_data['MonthYear'].str.split(' ', expand=True)
     transformed_data[['Name']] = transformed_data[['Name']].fillna('Name_less')
     transformed_data[['Outcome Subtype']] = transformed_data[['Outcome Subtype']].fillna('Not_Available')
-    transformed_data.drop(['MonthYear'], axis=1, inplace = True)
+    transformed_data.drop(['MonthYear','Age upon Outcome'], axis=1, inplace = True)
+    mapping = {
+    'Animal ID': 'animal_id',
+    'Name': 'animal_name',
+    'DateTime': 'timestmp',
+    'Date of Birth': 'dob',
+    'Outcome Type': 'outcome_type',
+    'Outcome Subtype': 'outcome_subtype',
+    'Animal Type': 'animal_type',
+    'Breed': 'breed',
+    'Color': 'color',
+    'Month': 'monthh',
+    'Year': 'yearr',
+    'Sex upon Outcome': 'sex'
+    }
+    transformed_data.rename(columns=mapping, inplace=True)
+    transformed_data[['reprod', 'gender']] = transformed_data.sex.str.split(' ', expand=True)
+    transformed_data.drop(columns = ['sex'], inplace=True)
+    #store this into a temporary table for us to populate the fact table later
     return transformed_data
 
 
-def export_data(new_data, target):
-    new_data.to_csv(target)
-
+def load_data(transformed_data):
+    db_addr = "postgresql+psycopg2://manasak:Mydb123$@db:5432/animalshelter"
+    connec = create_engine(db_addr)
+  #  temp_table_stmt = text("CREATE TABLE IF NOT EXISTS TEMP_TABLE(ANIMAL_ID VARCHAR, ANIMAL_TYPE VARCHAR, ANIMAL_NAME VARCHAR, DOB DATE, BREED VARCHAR, COLOR VARCHAR, REPROD VARCHAR, GENDER VARCHAR,TIMESTMP TIMESTAMP,)")
+  #  with connec.begin() as connection:
+  #      connection.execute()
+    time_df_data = transformed_data.copy()
+    outcome_df_data = transformed_data.copy()
+    transformed_data.to_sql("temp_table",connec,if_exists="append",index=False)
+    time_df = time_df_data[['monthh','yearr']].drop_duplicates()
+    time_df[['monthh','yearr']].to_sql("timingdimension", connec, if_exists="append", index = False)
+    transformed_data[['animal_id','animal_type','animal_name','dob','breed','color','reprod','gender','timestmp']].to_sql("animaldimension", connec, if_exists="append", index = False)
+    
+    df = outcome_df_data[['outcome_type','outcome_subtype']].drop_duplicates()
+    df[['outcome_type','outcome_subtype']].to_sql("outcomedimension", connec, if_exists="append", index = False)
+    sql_statement = text("""
+    INSERT INTO outcomesfact (outcome_dim_key, animal_dim_key, time_dim_key)
+    SELECT od.outcome_dim_key, a.animal_dim_key, td.time_dim_key
+    FROM temp_table o
+    JOIN outcomedimension od ON o.outcome_type = od.outcome_type AND o.outcome_subtype = od.outcome_subtype
+    JOIN timingdimension td ON o.monthh = td.monthh AND o.yearr = td.yearr
+    JOIN animaldimension a ON a.animal_id = o.animal_id AND a.animal_type = o.animal_type AND a.timestmp = o.timestmp;
+    """)
+    with connec.begin() as connection:
+        connection.execute(sql_statement)
 
 if __name__ == "__main__":
-    args_parser = argparse.ArgumentParser()
-    args_parser.add_argument('source', help='source csv')
-    args_parser.add_argument('target', help=('target file'))
-    args = args_parser.parse_args()
 
     print("Start processing....")
-    data = read_data(args.source)
-    new_data = transform_data(data)
-    export_data(new_data, args.target)
+    data = extract_data()
+    transformed_data = transform_data(data)
+    load_data(transformed_data)
     print("Finished processing.....")
