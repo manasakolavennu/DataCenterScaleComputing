@@ -163,3 +163,4 @@ def transform_data():
     write_data_to_gcs(dim_date_tab, credentials, bucket, dim_dates_path)
     write_data_to_gcs(dim_outcome_tab, credentials, bucket, dim_outcome_types_path)
     write_data_to_gcs(outcomes_fact_tab, credentials, bucket, fct_outcomes_path)
+    

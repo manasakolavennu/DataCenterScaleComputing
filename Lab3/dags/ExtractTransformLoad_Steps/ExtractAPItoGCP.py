@@ -102,3 +102,4 @@ def main():
     gcs_file_path = 'data/{}/outcomes_{}.csv'
 
     upload_to_gcs(shelter_data, gcs_bucket_name, gcs_file_path)
+    

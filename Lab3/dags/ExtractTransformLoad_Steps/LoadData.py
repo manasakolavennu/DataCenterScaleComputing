@@ -152,3 +152,4 @@ def load_data_to_postgres(file_name, table_name):
 
     postgres_dataloader.create_table(postgres_connection, table_query)
     postgres_dataloader.load_data_into_postgres(postgres_connection, table_data_df, table_name)
+    
