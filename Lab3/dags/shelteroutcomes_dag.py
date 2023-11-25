@@ -65,6 +65,6 @@ with DAG(
         
         end = BashOperator(task_id = "END", bash_command = "echo end")
 
-        # start >> extract_data_from_api_to_gcp >> transform_data_step >> 
+        #  start >> extract_data_from_api_to_gcp >> transform_data_step >> 
         # [load_dim_animals, load_dim_outcome_types, load_dim_dates, load_fct_outcomes] >> end
         start >> extract_data_from_api_to_gcp >> transform_data_from_gcp_step >> [load_dim_animals_tab, load_dim_outcome_types_tab, load_dim_dates_tab] >> load_fct_outcomes_tab >> end

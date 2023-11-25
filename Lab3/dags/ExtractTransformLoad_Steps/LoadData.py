@@ -109,7 +109,7 @@ class PostgresDataLoader:
                         """
             alter_table_query = ";"
         return f"{drop_table_query}\n{query}\n{alter_table_query}".strip()
-        #return f"{query}"
+        # return f"{query}"
 
     def connect_to_postgres(self):
         connection = psycopg2.connect(**self.db_config)
@@ -152,4 +152,3 @@ def load_data_to_postgres(file_name, table_name):
 
     postgres_dataloader.create_table(postgres_connection, table_query)
     postgres_dataloader.load_data_into_postgres(postgres_connection, table_data_df, table_name)
-    

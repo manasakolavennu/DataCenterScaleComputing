@@ -5,7 +5,7 @@ from datetime import datetime
 from google.cloud import storage
 
 
-# Set the time zone to Mountain Time
+#  Set the time zone to Mountain Time
 mountain_time_zone = pytz.timezone('US/Mountain')
 
 
@@ -102,4 +102,3 @@ def main():
     gcs_file_path = 'data/{}/outcomes_{}.csv'
 
     upload_to_gcs(shelter_data, gcs_bucket_name, gcs_file_path)
-    

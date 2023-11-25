@@ -69,7 +69,7 @@ def write_data_to_gcs(dataframe, credentials_info, bucket_name, file_path):
     
     bucket = client.get_bucket(bucket_name)
     
-    # current_date = datetime.now(mountain_time_zone).strftime('%Y-%m-%d')
+    #  current_date = datetime.now(mountain_time_zone).strftime('%Y-%m-%d')
     # formatted_file_path = file_path.format(current_date, current_date)
     
     blob = bucket.blob(file_path)
@@ -163,4 +163,3 @@ def transform_data():
     write_data_to_gcs(dim_date_tab, credentials, bucket, dim_dates_path)
     write_data_to_gcs(dim_outcome_tab, credentials, bucket, dim_outcome_types_path)
     write_data_to_gcs(outcomes_fact_tab, credentials, bucket, fct_outcomes_path)
-    
