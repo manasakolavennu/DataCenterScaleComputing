@@ -12,7 +12,7 @@ from airflow.operators.python_operator import PythonOperator
 
 from ExtractTransformLoad_Steps.TransformData import transform_data
 from ExtractTransformLoad_Steps.ExtractAPItoGCP import main
-from ExtractTransformLoad_Steps.LoadData import load_data_to_postgres
+from ExtractTransformLoad_Steps.LoadData import load_data_to_postgres, drop_existing_tables
 
 # AIRFLOW_HOME = os.environ.get('AIRFLOW_HOME', '/opt/airflow')
 # CREDS_TARGET_DIR = AIRFLOW_HOME + '/warm-physics-405522-a07e9b7bfc0d.json'
@@ -46,6 +46,9 @@ with DAG(
 
         transform_data_from_gcp_step = PythonOperator(task_id="TRANSFORM_DATA_FROM_GCP",
                                               python_callable=transform_data,)
+        
+        drop_existing_table_data = PythonOperator(task_id="DROP_TABLES_DATA",
+                                            python_callable=drop_existing_tables,)
 
         load_dim_animals_tab = PythonOperator(task_id="LOAD_DIM_ANIMALS",
                                             python_callable=load_data_to_postgres,
@@ -67,4 +70,5 @@ with DAG(
 
         #  start >> extract_data_from_api_to_gcp >> transform_data_step >> 
         # [load_dim_animals, load_dim_outcome_types, load_dim_dates, load_fct_outcomes] >> end
-        start >> extract_data_from_api_to_gcp >> transform_data_from_gcp_step >> [load_dim_animals_tab, load_dim_outcome_types_tab, load_dim_dates_tab] >> load_fct_outcomes_tab >> end
+        #start >> extract_data_from_api_to_gcp >> transform_data_from_gcp_step >> [load_dim_animals_tab, load_dim_outcome_types_tab, load_dim_dates_tab] >> load_fct_outcomes_tab >> end
+        start >> extract_data_from_api_to_gcp >> transform_data_from_gcp_step >> drop_existing_table_data >> load_dim_animals_tab >> load_dim_outcome_types_tab >> load_dim_dates_tab >> load_fct_outcomes_tab >> end

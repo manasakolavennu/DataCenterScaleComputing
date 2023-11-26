@@ -8,19 +8,6 @@ from collections import OrderedDict
 
 mountain_time_zone = pytz.timezone('US/Mountain')
 
-# creating the global mapping for outcome types
-outcomes_map = {'Rto-Adopt':1, 
-                'Adoption':2, 
-                'Euthanasia':3, 
-                'Transfer':4,
-                'Return to Owner':5, 
-                'Died':6,
-                'Disposal':7,
-                'Missing': 8,
-                'Relocate':9,
-                'N/A':10,
-                'Stolen':11}
-
 
 def getcredentials():
     bucket = "data_center_lab3"
@@ -120,11 +107,11 @@ def transform(data):
     transformed_data['month_recorded'] = transformed_data['monthyear'].dt.month
     transformed_data['year_recorded'] = transformed_data['monthyear'].dt.year
     #transformed_data[['Month', 'Year']] = transformed_data['MonthYear'].str.split(' ', expand=True)
-    transformed_data[['Name']] = transformed_data[['name']].fillna('Name_less')
+    transformed_data['name'] = transformed_data['name'].fillna('Name_less')
+    transformed_data['outcome_type'] = transformed_data['outcome_type'].fillna('Not_Available')
     transformed_data.drop(['monthyear','age_upon_outcome'], axis=1, inplace = True)
     mapping = {
     'Animal ID': 'animal_id',
-    'Name': 'name',
     'datetime': 'datetime',
     'date_of_birth': 'date_of_birth',
     'outcome_type': 'outcome_type',
@@ -139,6 +126,9 @@ def transform(data):
     transformed_data[['reprod', 'gender']] = transformed_data.sex.str.split(' ', expand=True)
     transformed_data.drop(columns = ['sex'], inplace=True)
     #store this into a temporary table for us to populate the fact table later
+
+    transformed_data['name'] = transformed_data['name'].str.replace('\W', '', regex=True)
+    
     return transformed_data
 
 def transform_data():
